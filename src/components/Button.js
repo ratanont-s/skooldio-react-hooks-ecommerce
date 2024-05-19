@@ -19,6 +19,11 @@ export const Button = styled.button`
   &:active {
     opacity: 0.9;
   }
+
+  &[disabled] {
+    background-color: #ddd;
+    pointer-events: none;
+  }
 `;
 
 export default Button;

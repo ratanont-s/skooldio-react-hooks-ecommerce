@@ -1,11 +1,14 @@
 import styled from 'styled-components';
 
+import { useEffect, useState, useCallback } from 'react';
+import { useParams } from 'react-router-dom/cjs/react-router-dom';
 import BaseContainer from '../components/Container';
 import Button from '../components/Button';
 import Input from '../components/Input';
 
 import { numberWithCommas } from '../utils';
-import { products } from '../data';
+import useApi from '../hooks/useApi';
+import useCart from '../hooks/useCart';
 
 const Container = styled(BaseContainer)`
   padding-top: 78px;
@@ -54,25 +57,44 @@ const Description = styled.p`
   margin-bottom: 72px;
 `;
 
-const data = products[0];
-
 /**
  * Below is the main ProductDetail component.
  */
-export const ProductDetail = () => (
-  <Container>
-    <ProductImage src={data.imageUrl} alt={`${data.name}`} />
-    <ProductInfo>
-      <Subtitle>
-        <span>{data.category}</span>
-        <span>฿{numberWithCommas(data.price)}</span>
-      </Subtitle>
-      <Title>{data.name}</Title>
-      <Description>{data.description}</Description>
-      <Input style={{ marginBottom: '40px' }} type={'number'} label={'Quantity'} />
-      <Button>Add to Cart</Button>
-    </ProductInfo>
-  </Container>
-);
+export const ProductDetail = () => {
+  const { productId } = useParams();
+  const [quantity, setQuantity] = useState('1');
+  const { addCartItem } = useCart();
+  const { data, loading } = useApi('/products/' + productId);
+  const handleQuantityChange = useCallback((e) => setQuantity(e.target.value), [setQuantity]);
+  const handleClick = useCallback(() => {
+    addCartItem(data, parseInt(quantity));
+    alert('เพิ่มสินค้าลงตะกร้าสำเร็จ!');
+  }, [data, addCartItem, quantity]);
+
+  if (loading || !data) return <div>Loading...</div>;
+  return (
+    <Container>
+      <ProductImage src={data.imageUrl} alt={`${data.name}`} />
+      <ProductInfo>
+        <Subtitle>
+          <span>{data.category}</span>
+          <span>฿{numberWithCommas(data.price)}</span>
+        </Subtitle>
+        <Title>{data.name}</Title>
+        <Description>{data.description}</Description>
+        <Input
+          style={{ marginBottom: '40px' }}
+          type={'number'}
+          label={'Quantity'}
+          value={quantity}
+          onChange={handleQuantityChange}
+        />
+        <Button disabled={!(quantity % 1 === 0 && quantity > 0)} onClick={handleClick}>
+          Add to Cart
+        </Button>
+      </ProductInfo>
+    </Container>
+  );
+};
 
 export default ProductDetail;
